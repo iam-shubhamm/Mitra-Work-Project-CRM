@@ -8,10 +8,11 @@ const root = resolve('.');
 const dataDir = join(root, 'data');
 const uploadDir = join(dataDir, 'uploads');
 if (!process.env.VERCEL) mkdirSync(uploadDir, { recursive: true });
-if (process.env.VERCEL && (!process.env.TURSO_DATABASE_URL || !process.env.TURSO_AUTH_TOKEN || !process.env.BLOB_READ_WRITE_TOKEN)) throw new Error('Connect Turso and Vercel Blob before deploying.');
+const tursoAuthToken = process.env.TURSO_AUTH_TOKEN || process.env.TURSO_DATABASE_TURSO_AUTH_TOKEN;
+if (process.env.VERCEL && (!process.env.TURSO_DATABASE_URL || !tursoAuthToken || !process.env.BLOB_READ_WRITE_TOKEN)) throw new Error('Connect Turso and Vercel Blob before deploying.');
 const db = createClient({
   url: process.env.TURSO_DATABASE_URL || 'file:./data/novacrm.sqlite',
-  authToken: process.env.TURSO_AUTH_TOKEN,
+  authToken: tursoAuthToken,
   intMode: 'number',
 });
 const dbGet = async (sql, ...args) => (await db.execute({ sql, args })).rows[0] ?? null;
