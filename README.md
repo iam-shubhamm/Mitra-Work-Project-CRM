@@ -5,6 +5,15 @@ Mitra Work is a lightweight team workspace for assigning work, tracking progress
 - **Live app:** https://mitra-work-project-crm.vercel.app/
 - **Source code:** https://github.com/iam-shubhamm/Mitra-Work-Project-CRM
 
+**NOTE :-** Please enter your ID and password on the website.
+
+    CEO Account
+        - ID: Shubham-CEO@gmail.com
+        - Password: SHUBHceo@2211
+    Employee Account
+        - ID: Shivam-EMP@gmail.com
+        - Password: SHIVemp@2211    
+ 
 ## Why I built it
 
 I built Mitra Work to make everyday team coordination easier to follow. Tasks, progress updates, and follow-ups can become scattered across conversations and documents. This project brings the core workflow into one place so a team can see what needs to be done, who owns it, what has changed, and where attention is needed.
