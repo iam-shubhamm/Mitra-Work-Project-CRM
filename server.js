@@ -36,15 +36,9 @@ CREATE TABLE IF NOT EXISTS task_deletion_requests(id INTEGER PRIMARY KEY, task_i
 CREATE TABLE IF NOT EXISTS messages(id INTEGER PRIMARY KEY, sender_id INTEGER NOT NULL REFERENCES users(id), recipient_id INTEGER NOT NULL REFERENCES users(id), subject TEXT NOT NULL, message TEXT NOT NULL, created_at TEXT DEFAULT CURRENT_TIMESTAMP, read_at TEXT);
 CREATE TABLE IF NOT EXISTS sessions(token_hash TEXT PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, expires_at INTEGER NOT NULL);
 CREATE TABLE IF NOT EXISTS activity(id INTEGER PRIMARY KEY, message TEXT NOT NULL, created_at TEXT DEFAULT CURRENT_TIMESTAMP);`);
-  const ensureColumn = async (table, column, ddl) => {
-    if (!(await dbAll(`PRAGMA table_info(${table})`)).some((item) => item.name === column)) {
-      try { await db.execute(ddl); }
-      catch (error) { if (!String(error.message).toLowerCase().includes('duplicate column')) throw error; }
-    }
-  };
-  await ensureColumn('activity', 'owner_id', 'ALTER TABLE activity ADD COLUMN owner_id INTEGER REFERENCES users(id) ON DELETE SET NULL');
-  await ensureColumn('activity', 'actor_id', 'ALTER TABLE activity ADD COLUMN actor_id INTEGER REFERENCES users(id) ON DELETE SET NULL');
-  for (const [table, column, ddl] of [
+  const migrations = [
+    ['activity', 'owner_id', 'ALTER TABLE activity ADD COLUMN owner_id INTEGER REFERENCES users(id) ON DELETE SET NULL'],
+    ['activity', 'actor_id', 'ALTER TABLE activity ADD COLUMN actor_id INTEGER REFERENCES users(id) ON DELETE SET NULL'],
     ['users', 'profile_title', "ALTER TABLE users ADD COLUMN profile_title TEXT DEFAULT ''"],
     ['users', 'phone', "ALTER TABLE users ADD COLUMN phone TEXT DEFAULT ''"],
     ['users', 'bio', "ALTER TABLE users ADD COLUMN bio TEXT DEFAULT ''"],
@@ -53,7 +47,25 @@ CREATE TABLE IF NOT EXISTS activity(id INTEGER PRIMARY KEY, message TEXT NOT NUL
     ['tasks', 'instructions', "ALTER TABLE tasks ADD COLUMN instructions TEXT DEFAULT ''"],
     ['tasks', 'project_name', "ALTER TABLE tasks ADD COLUMN project_name TEXT DEFAULT ''"],
     ['daily_activity', 'project_name', "ALTER TABLE daily_activity ADD COLUMN project_name TEXT DEFAULT ''"],
-  ]) await ensureColumn(table, column, ddl);
+  ];
+  const columnQuery = `SELECT 'activity' table_name,name FROM pragma_table_info('activity')
+UNION ALL SELECT 'users',name FROM pragma_table_info('users')
+UNION ALL SELECT 'tasks',name FROM pragma_table_info('tasks')
+UNION ALL SELECT 'daily_activity',name FROM pragma_table_info('daily_activity')`;
+  const readColumns = async () => new Set((await dbAll(columnQuery)).map((item) => `${item.table_name}.${item.name}`));
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const existingColumns = await readColumns();
+    const pending = migrations.filter(([table, column]) => !existingColumns.has(`${table}.${column}`));
+    if (!pending.length) break;
+    try { await db.executeMultiple(pending.map(([, , ddl]) => ddl).join(';\n')); break; }
+    catch (error) {
+      if (!String(error.message).toLowerCase().includes('duplicate column')) throw error;
+      if (attempt === 2) {
+        const currentColumns = await readColumns();
+        if (migrations.some(([table, column]) => !currentColumns.has(`${table}.${column}`))) throw error;
+      }
+    }
+  }
   await dbRun("INSERT INTO task_updates(task_id,user_id,summary,old_status,new_status,created_at) SELECT t.id,t.owner_id,'Task history started.','',t.status,t.created_at FROM tasks t WHERE t.owner_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM task_updates h WHERE h.task_id=t.id)");
 }
 await initializeDatabase();
