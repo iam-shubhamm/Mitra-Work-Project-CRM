@@ -14,7 +14,7 @@ Mitra Work is a lightweight team workspace for assigning work, tracking progress
         - ID: Shivam-EMP@gmail.com
         - Password: SHIVemp@2211    
  
-## Why I built it
+## Why I built it ?
 
 I built Mitra Work to make everyday team coordination easier to follow. Tasks, progress updates, and follow-ups can become scattered across conversations and documents. This project brings the core workflow into one place so a team can see what needs to be done, who owns it, what has changed, and where attention is needed.
 
