@@ -129,7 +129,7 @@ Vercel task attachments are limited to 3 MB each; local attachments can be up to
 
 The roadmap is to make the workspace safer and more useful as a team grows:
 
-1. Add verified email-based password recovery and account notifications.
+1. Add verified email-based password recovery and account notifications..
 2. Add rate limiting, CSRF defenses, and stronger account/session management.
 3. Automate Turso backups and test restore procedures.
 4. Improve dashboard filters, workload views, and reporting.
